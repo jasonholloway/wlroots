@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="wlr_color_unstable_v1">
+
+  <interface name="zwlr_ctm_manager_v1" version="1">
+
+    <request name="get_ctm_control">
+      <arg name="id" type="new_id" interface="zwlr_ctm_control_v1"/>
+      <arg name="output" type="object" interface="wl_output"/>
+    </request>
+
+    <request name="destroy" type="destructor">
+    </request>
+  </interface>
+
+  <interface name="zwlr_ctm_control_v1" version="1">
+    <description summary="adjust ctm for an output">
+      This interface allows a client to adjust gamma tables for a particular
+      output.
+
+      The client will receive the gamma size, and will then be able to set gamma
+      tables. At any time the compositor can send a failed event indicating that
+      this object is no longer valid.
+
+      There must always be at most one gamma control object per output, which
+      has exclusive access to this particular output. When the gamma control
+      object is destroyed, the color table is restored to its original value.
+    </description>
+
+    <!-- <event name="gamma_size"> -->
+    <!--   <description summary="size of gamma ramps"> -->
+    <!--     Advertise the size of each gamma ramp. -->
+
+    <!--     This event is sent immediately when the gamma control object is created. -->
+    <!--   </description> -->
+    <!--   <arg name="size" type="uint" summary="number of elements in a ramp"/> -->
+    <!-- </event> -->
+
+    <enum name="error">
+      <entry name="invalid_ctm" value="1" summary="invalid ctm"/>
+    </enum>
+
+    <request name="set_ctm">
+      <description summary="set the gamma table">
+        Set the gamma table. The file descriptor can be memory-mapped to provide
+        the raw gamma table, which contains successive gamma ramps for the red,
+        green and blue channels. Each gamma ramp is an array of 16-byte unsigned
+        integers which has the same length as the gamma size.
+
+        The file descriptor data must have the same length as three times the
+        gamma size.
+      </description>
+      <arg name="fd" type="fd" summary="gamma table file descriptor"/>
+    </request>
+
+    <event name="failed">
+      <description summary="object no longer valid">
+        This event indicates that the color control is no longer valid. This
+        can happen for a number of reasons, including:
+        - The output doesn't support color tables
+        - Setting the color tables failed
+        - Another client already has exclusive color control for this output
+        - The compositor has transferred color control to another client
+
+        Upon receiving this event, the client should destroy this object.
+      </description>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy this control">
+        Destroys the color control object. If the object is still valid, this
+        restores the original color table.
+      </description>
+    </request>
+  </interface>
+</protocol>
