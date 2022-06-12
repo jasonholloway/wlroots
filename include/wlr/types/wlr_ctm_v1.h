@@ -3,7 +3,7 @@
 
 #include <wayland-server-core.h>
 
-struct wlr_gamma_control_manager_v1 {
+struct wlr_ctm_manager_v1 {
 	struct wl_global *global;
 	struct wl_list controls; // wlr_gamma_control_v1.link
 
@@ -16,7 +16,7 @@ struct wlr_gamma_control_manager_v1 {
 	void *data;
 };
 
-struct wlr_gamma_control_v1 {
+struct wlr_ctm_control_v1 {
 	struct wl_resource *resource;
 	struct wlr_output *output;
 	struct wl_list link;
@@ -30,7 +30,7 @@ struct wlr_gamma_control_v1 {
 	void *data;
 };
 
-struct wlr_gamma_control_manager_v1 *wlr_gamma_control_manager_v1_create(
+struct wlr_ctm_manager_v1 *wlr_ctm_manager_v1_create(
 	struct wl_display *display);
 
 #endif
