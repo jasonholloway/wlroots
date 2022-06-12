@@ -96,6 +96,11 @@ clients = {
 			'xdg-shell',
 		],
 	},
+	'ctm': {
+		'src': 'ctm.c',
+		'dep': [wayland_cursor, math],
+		'proto': ['wlr-ctm-unstable-v1'],
+	},
 	'gamma-control': {
 		'src': 'gamma-control.c',
 		'dep': [wayland_cursor, math],

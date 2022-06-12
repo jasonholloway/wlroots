@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_ctm_v1.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 
@@ -61,6 +62,8 @@ struct tinywl_server {
 	double grab_x, grab_y;
 	struct wlr_box grab_geobox;
 	uint32_t resize_edges;
+
+	struct wlr_ctm_manager_v1 *ctm;
 
 	struct wlr_output_layout *output_layout;
 	struct wl_list outputs;
@@ -774,6 +777,8 @@ int main(int argc, char *argv[]) {
 	server.new_output.notify = server_new_output;
 	wl_signal_add(&server.backend->events.new_output, &server.new_output);
 
+	server.ctm = wlr_ctm_manager_v1_create(server.wl_display);
+
 	/* Create a scene graph. This is a wlroots abstraction that handles all
 	 * rendering and damage tracking. All the compositor author needs to do
 	 * is add things that should be rendered to the scene graph at the proper
@@ -782,6 +787,7 @@ int main(int argc, char *argv[]) {
 	 */
 	server.scene = wlr_scene_create();
 	wlr_scene_attach_output_layout(server.scene, server.output_layout);
+
 
 	/* Set up the xdg-shell. The xdg-shell is a Wayland protocol which is used
 	 * for application windows. For more detail on shells, refer to my article:
