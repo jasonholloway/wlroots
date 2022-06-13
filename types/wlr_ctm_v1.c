@@ -37,10 +37,10 @@ static void ctm_control_destroy(struct wlr_ctm_control_v1 *control) {
 	free(control);
 }
 
-/* static void ctm_control_send_failed(struct wlr_ctm_control_v1 *control) { */
-/* 	zwlr_ctm_control_v1_send_failed(control->resource); */
-/* 	ctm_control_destroy(control); */
-/* } */
+static void ctm_control_send_failed(struct wlr_ctm_control_v1 *control) {
+	zwlr_ctm_control_v1_send_failed(control->resource);
+	ctm_control_destroy(control);
+}
 
 static void ctm_control_apply(struct wlr_ctm_control_v1 *control) {
 
@@ -95,26 +95,23 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 
 	struct wlr_ctm_control_v1 *control = ctm_control_from_resource(resource);
 	if (control == NULL) {
-		goto error_fd;
+		goto error;
 	}
 
 	fprintf(stderr, "RECEIVED CTM!");
 
-	/* uint32_t ramp_size = wlr_output_get_gamma_size(control->output); */
-	/* size_t table_size = ramp_size * 3 * sizeof(uint16_t); */
-
 	/* // Refuse to block when reading */
-	/* int fd_flags = fcntl(fd, F_GETFL, 0); */
-	/* if (fd_flags == -1) { */
-	/* 	wlr_log_errno(WLR_ERROR, "failed to get FD flags"); */
-	/* 	ctm_control_send_failed(control); */
-	/* 	goto error_fd; */
-	/* } */
-	/* if (fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) == -1) { */
-	/* 	wlr_log_errno(WLR_ERROR, "failed to set FD flags"); */
-	/* 	ctm_control_send_failed(control); */
-	/* 	goto error_fd; */
-	/* } */
+	int fd_flags = fcntl(fd, F_GETFL, 0);
+	if (fd_flags == -1) {
+		wlr_log_errno(WLR_ERROR, "failed to get FD flags");
+		ctm_control_send_failed(control);
+		goto error;
+	}
+	if (fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) == -1) {
+		wlr_log_errno(WLR_ERROR, "failed to set FD flags");
+		ctm_control_send_failed(control);
+		goto error;
+	}
 
 	/* // Use the heap since gamma tables can be large */
 	/* uint16_t *table = malloc(table_size); */
@@ -123,23 +120,25 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 	/* 	goto error_fd; */
 	/* } */
 
-	/* ssize_t n_read = read(fd, table, table_size); */
-	/* if (n_read < 0) { */
-	/* 	wlr_log_errno(WLR_ERROR, "failed to read gamma table"); */
-	/* 	ctm_control_send_failed(control); */
-	/* 	goto error_table; */
-	/* } else if ((size_t)n_read != table_size) { */
-	/* 	wl_resource_post_error(resource, */
-	/* 		ZWLR_CTM_CONTROL_V1_ERROR_INVALID_CTM, */
-	/* 		"The gamma ramps don't have the correct size"); */
-	/* 	goto error_table; */
-	/* } */
-	/* close(fd); */
-	/* fd = -1; */
+	size_t size = 18 * sizeof(uint32_t);
+	uint32_t ctm[18];
+
+	ssize_t n_read = read(fd, ctm, size);
+	if (n_read < 0) {
+		wlr_log_errno(WLR_ERROR, "failed to read ctm fd");
+		ctm_control_send_failed(control);
+		goto error;
+	} else if ((size_t)n_read != size) {
+		wl_resource_post_error(resource,
+			ZWLR_CTM_CONTROL_V1_ERROR_INVALID_CTM,
+			"The ctm fd doesn't have the right amount of data");
+		goto error;
+	}
+	close(fd);
+	fd = -1;
 
 	/* free(control->table); */
 	/* control->table = table; */
-	/* control->ramp_size = ramp_size; */
 
 	/* if (control->output->enabled) { */
 	/* 	ctm_control_apply(control); */
@@ -147,10 +146,8 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 
 	return;
 
-/* error_table: */
-/* 	free(table); */
-error_fd:
-/* 	close(fd); */
+error:
+	close(fd);
 }
 
 static const struct zwlr_ctm_control_v1_interface ctm_control_impl = {
