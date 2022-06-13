@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <wlr/util/log.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -197,6 +198,10 @@ static bool atomic_crtc_commit(struct wlr_drm_connector *conn,
 				return false;
 			}
 		}
+	}
+
+	if (state->base->committed & WLR_OUTPUT_STATE_CTM) {
+		fprintf(stderr, "WOWZERS!!\n");
 	}
 
 	uint32_t fb_damage_clips = 0;

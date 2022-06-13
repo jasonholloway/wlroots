@@ -33,7 +33,6 @@ static void ctm_control_destroy(struct wlr_ctm_control_v1 *control) {
 	wl_list_remove(&control->output_destroy_listener.link);
 	wl_list_remove(&control->output_commit_listener.link);
 	wl_list_remove(&control->link);
-	free(control->table);
 	free(control);
 }
 
@@ -43,12 +42,7 @@ static void ctm_control_send_failed(struct wlr_ctm_control_v1 *control) {
 }
 
 static void ctm_control_apply(struct wlr_ctm_control_v1 *control) {
-
-	/* uint16_t *r = control->table; */
-	/* uint16_t *g = control->table + control->ramp_size; */
-	/* uint16_t *b = control->table + 2 * control->ramp_size; */
-
-	/* wlr_output_set_gamma(control->output, control->ramp_size, r, g, b); */
+	wlr_output_set_ctm(control->output, control->ctm);
 
 	/* if (!wlr_output_test(control->output)) { */
 	/* 	wlr_output_rollback(control->output); */
@@ -98,8 +92,6 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 		goto error;
 	}
 
-	fprintf(stderr, "RECEIVED CTM!");
-
 	/* // Refuse to block when reading */
 	int fd_flags = fcntl(fd, F_GETFL, 0);
 	if (fd_flags == -1) {
@@ -113,17 +105,9 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 		goto error;
 	}
 
-	/* // Use the heap since gamma tables can be large */
-	/* uint16_t *table = malloc(table_size); */
-	/* if (table == NULL) { */
-	/* 	wl_resource_post_no_memory(resource); */
-	/* 	goto error_fd; */
-	/* } */
-
 	size_t size = 18 * sizeof(uint32_t);
-	uint32_t ctm[18];
 
-	ssize_t n_read = read(fd, ctm, size);
+	ssize_t n_read = read(fd, &control->ctm, size);
 	if (n_read < 0) {
 		wlr_log_errno(WLR_ERROR, "failed to read ctm fd");
 		ctm_control_send_failed(control);
@@ -137,12 +121,11 @@ static void ctm_control_handle_set_ctm(struct wl_client *client,
 	close(fd);
 	fd = -1;
 
-	/* free(control->table); */
-	/* control->table = table; */
+	fprintf(stderr, "RECEIVED AND READ CTM!");
 
-	/* if (control->output->enabled) { */
-	/* 	ctm_control_apply(control); */
-	/* } */
+	if (control->output->enabled) {
+		ctm_control_apply(control);
+	}
 
 	return;
 

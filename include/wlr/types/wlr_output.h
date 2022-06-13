@@ -62,6 +62,7 @@ enum wlr_output_state_field {
 	WLR_OUTPUT_STATE_ADAPTIVE_SYNC_ENABLED = 1 << 6,
 	WLR_OUTPUT_STATE_GAMMA_LUT = 1 << 7,
 	WLR_OUTPUT_STATE_RENDER_FORMAT = 1 << 8,
+	WLR_OUTPUT_STATE_CTM = 1 << 10,
 };
 
 enum wlr_output_state_mode_type {
@@ -95,6 +96,9 @@ struct wlr_output_state {
 	// only valid if WLR_OUTPUT_STATE_GAMMA_LUT
 	uint16_t *gamma_lut;
 	size_t gamma_lut_size;
+
+	// only valid if WLR_OUTPUT_STATE_CTM
+	uint32_t *ctm;
 };
 
 struct wlr_output_impl;
@@ -445,6 +449,12 @@ size_t wlr_output_get_gamma_size(struct wlr_output *output);
  */
 void wlr_output_set_gamma(struct wlr_output *output, size_t size,
 	const uint16_t *r, const uint16_t *g, const uint16_t *b);
+/**
+ * Sets the 'Color Transformation Matrix' (ctm) for this output.
+ *
+ * The gamma table is double-buffered state, see `wlr_output_commit`.
+ */
+void wlr_output_set_ctm(struct wlr_output *output, const uint32_t *ctm);
 /**
  * Returns the wlr_output matching the provided wl_output resource. If the
  * resource isn't a wl_output, it aborts. If the resource is inert (because the

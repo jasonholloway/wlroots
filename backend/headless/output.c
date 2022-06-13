@@ -9,7 +9,8 @@
 static const uint32_t SUPPORTED_OUTPUT_STATE =
 	WLR_OUTPUT_STATE_BACKEND_OPTIONAL |
 	WLR_OUTPUT_STATE_BUFFER |
-	WLR_OUTPUT_STATE_MODE;
+	WLR_OUTPUT_STATE_MODE |
+	WLR_OUTPUT_STATE_CTM;
 
 static struct wlr_headless_output *headless_output_from_output(
 		struct wlr_output *wlr_output) {

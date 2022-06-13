@@ -3,6 +3,7 @@
 #include <backend/backend.h>
 #include <drm_fourcc.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <wlr/interfaces/wlr_output.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_surface.h>
@@ -519,6 +520,12 @@ static void output_state_clear_gamma_lut(struct wlr_output_state *state) {
 	state->committed &= ~WLR_OUTPUT_STATE_GAMMA_LUT;
 }
 
+static void output_state_clear_ctm(struct wlr_output_state *state) {
+	free(state->ctm);
+	state->ctm = NULL;
+	state->committed &= ~WLR_OUTPUT_STATE_CTM;
+}
+
 static void output_state_clear(struct wlr_output_state *state) {
 	output_state_clear_buffer(state);
 	output_state_clear_gamma_lut(state);
@@ -632,6 +639,10 @@ static bool output_basic_test(struct wlr_output *output) {
 	}
 	if (!enabled && output->pending.committed & WLR_OUTPUT_STATE_GAMMA_LUT) {
 		wlr_log(WLR_DEBUG, "Tried to set the gamma lut on a disabled output");
+		return false;
+	}
+	if (!enabled && output->pending.committed & WLR_OUTPUT_STATE_CTM) {
+		wlr_log(WLR_DEBUG, "Tried to set the ctm on a disabled output");
 		return false;
 	}
 
@@ -832,6 +843,21 @@ void wlr_output_send_present(struct wlr_output *output,
 	}
 
 	wlr_signal_emit_safe(&output->events.present, event);
+}
+
+void wlr_output_set_ctm(struct wlr_output *output, const uint32_t *ctm) {
+	fprintf(stderr, "HULLO");
+	output_state_clear_ctm(&output->pending);
+
+	output->pending.ctm = malloc(18 * sizeof(uint32_t));
+	if (output->pending.ctm == NULL) {
+		wlr_log_errno(WLR_ERROR, "Allocation failed");
+		return;
+	}
+
+	memcpy(output->pending.ctm, ctm, 18 * sizeof(uint32_t));
+
+	output->pending.committed |= WLR_OUTPUT_STATE_CTM;
 }
 
 void wlr_output_set_gamma(struct wlr_output *output, size_t size,
