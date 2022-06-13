@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <wayland-server-core.h>
 #include <wlr/interfaces/wlr_output.h>
 #include <wlr/types/wlr_ctm_v1.h>
@@ -91,10 +92,13 @@ static void ctm_control_handle_output_commit(struct wl_listener *listener, void 
 
 static void ctm_control_handle_set_ctm(struct wl_client *client,
 		struct wl_resource *resource, int fd) {
+
 	struct wlr_ctm_control_v1 *control = ctm_control_from_resource(resource);
 	if (control == NULL) {
 		goto error_fd;
 	}
+
+	fprintf(stderr, "RECEIVED CTM!");
 
 	/* uint32_t ramp_size = wlr_output_get_gamma_size(control->output); */
 	/* size_t table_size = ramp_size * 3 * sizeof(uint16_t); */
