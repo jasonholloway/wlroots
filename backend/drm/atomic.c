@@ -104,6 +104,18 @@ static bool create_gamma_lut_blob(struct wlr_drm_backend *drm,
 	return true;
 }
 
+static bool create_ctm_blob(struct wlr_drm_backend *drm,
+		const uint32_t *ctm, uint32_t *blob_id) {
+	int size = sizeof(struct drm_color_ctm);
+
+	if (drmModeCreatePropertyBlob(drm->fd, ctm, size, blob_id) != 0) {
+		wlr_log_errno(WLR_ERROR, "Unable to create CTM property blob");
+		return false;
+	}
+
+	return true;
+}
+
 static void commit_blob(struct wlr_drm_backend *drm,
 		uint32_t *current, uint32_t next) {
 	if (*current == next) {
@@ -200,8 +212,19 @@ static bool atomic_crtc_commit(struct wlr_drm_connector *conn,
 		}
 	}
 
+	uint32_t ctm = crtc->ctm;
 	if (state->base->committed & WLR_OUTPUT_STATE_CTM) {
-		fprintf(stderr, "WOWZERS!!\n");
+		fprintf(stderr, "atomic commit!!!\n");
+
+		if (crtc->props.ctm == 0) {
+			free(state->base->ctm);
+			return false;
+		}
+		else {
+			if(!create_ctm_blob(drm, state->base->ctm, &ctm)) {
+				return false;
+			}
+		}
 	}
 
 	uint32_t fb_damage_clips = 0;
@@ -247,6 +270,9 @@ static bool atomic_crtc_commit(struct wlr_drm_connector *conn,
 		if (crtc->props.gamma_lut != 0) {
 			atomic_add(&atom, crtc->id, crtc->props.gamma_lut, gamma_lut);
 		}
+		if (crtc->props.ctm != 0) {
+			atomic_add(&atom, crtc->id, crtc->props.ctm, ctm);
+		}
 		if (crtc->props.vrr_enabled != 0) {
 			atomic_add(&atom, crtc->id, crtc->props.vrr_enabled, vrr_enabled);
 		}
@@ -276,6 +302,7 @@ static bool atomic_crtc_commit(struct wlr_drm_connector *conn,
 	if (ok && !test_only) {
 		commit_blob(drm, &crtc->mode_id, mode_id);
 		commit_blob(drm, &crtc->gamma_lut, gamma_lut);
+		commit_blob(drm, &crtc->ctm, ctm);
 
 		if (vrr_enabled != prev_vrr_enabled) {
 			output->adaptive_sync_status = vrr_enabled ?
@@ -287,6 +314,7 @@ static bool atomic_crtc_commit(struct wlr_drm_connector *conn,
 	} else {
 		rollback_blob(drm, &crtc->mode_id, mode_id);
 		rollback_blob(drm, &crtc->gamma_lut, gamma_lut);
+		rollback_blob(drm, &crtc->ctm, ctm);
 	}
 
 	if (fb_damage_clips != 0 &&

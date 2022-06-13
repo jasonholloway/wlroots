@@ -35,6 +35,7 @@ static const struct prop_info connector_info[] = {
 static const struct prop_info crtc_info[] = {
 #define INDEX(name) (offsetof(union wlr_drm_crtc_props, name) / sizeof(uint32_t))
 	{ "ACTIVE", INDEX(active) },
+	{ "CTM", INDEX(ctm) },
 	{ "GAMMA_LUT", INDEX(gamma_lut) },
 	{ "GAMMA_LUT_SIZE", INDEX(gamma_lut_size) },
 	{ "MODE_ID", INDEX(mode_id) },

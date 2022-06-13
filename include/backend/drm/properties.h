@@ -32,6 +32,7 @@ union wlr_drm_crtc_props {
 	struct {
 		// Neither of these are guaranteed to exist
 		uint32_t vrr_enabled;
+		uint32_t ctm;
 		uint32_t gamma_lut;
 		uint32_t gamma_lut_size;
 
