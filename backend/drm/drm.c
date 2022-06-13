@@ -323,6 +323,9 @@ static struct wlr_drm_connector *get_drm_connector_from_output(
 static bool drm_crtc_commit(struct wlr_drm_connector *conn,
 		const struct wlr_drm_connector_state *state,
 		uint32_t flags, bool test_only) {
+
+	fprintf(stderr, "drm crtc commit!!\n");
+	
 	// Disallow atomic-only flags
 	assert((flags & ~DRM_MODE_PAGE_FLIP_FLAGS) == 0);
 
