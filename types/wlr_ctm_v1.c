@@ -44,13 +44,12 @@ static void ctm_control_send_failed(struct wlr_ctm_control_v1 *control) {
 static void ctm_control_apply(struct wlr_ctm_control_v1 *control) {
 	wlr_output_set_ctm(control->output, control->ctm);
 
-	/* if (!wlr_output_test(control->output)) { */
-	/* 	wlr_output_rollback(control->output); */
-	/* 	ctm_control_send_failed(control); */
-	/* 	return; */
-	/* } */
+	if (!wlr_output_test(control->output)) {
+		wlr_output_rollback(control->output);
+		ctm_control_send_failed(control);
+		return;
+	}
 
-	// Gamma LUT will be applied on next output commit
 	wlr_output_schedule_frame(control->output);
 }
 
@@ -190,13 +189,6 @@ static void ctm_manager_get_control(struct wl_client *client,
 
 	wl_list_init(&control->link);
 
-	/* size_t gamma_size = wlr_output_get_gamma_size(output); */
-	/* if (gamma_size == 0) { */
-	/* 	zwlr_gamma_control_v1_send_failed(gamma_control->resource); */
-	/* 	gamma_control_destroy(gamma_control); */
-	/* 	return; */
-	/* } */
-
 	struct wlr_ctm_control_v1 *gc;
 	wl_list_for_each(gc, &manager->controls, link) {
 		if (gc->output == output) {
@@ -208,7 +200,6 @@ static void ctm_manager_get_control(struct wl_client *client,
 
 	wl_list_remove(&control->link);
 	wl_list_insert(&manager->controls, &control->link);
-	/* zwlr_ctm_control_v1_send_ctm_size(control->resource, gamma_size); */
 }
 
 static void ctm_manager_destroy(struct wl_client *client,
