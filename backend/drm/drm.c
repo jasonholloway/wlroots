@@ -588,7 +588,7 @@ bool drm_connector_commit_state(struct wlr_drm_connector *conn,
 			return false;
 		}
 	} else if (pending.base->committed & (WLR_OUTPUT_STATE_ADAPTIVE_SYNC_ENABLED |
-			WLR_OUTPUT_STATE_GAMMA_LUT)) {
+			WLR_OUTPUT_STATE_GAMMA_LUT | WLR_OUTPUT_STATE_CTM)) {
 		assert(conn->crtc != NULL);
 		// TODO: maybe request a page-flip event here?
 		if (!drm_crtc_commit(conn, &pending, 0, false)) {
