@@ -42,6 +42,7 @@ static void ctm_control_send_failed(struct wlr_ctm_control_v1 *control) {
 }
 
 static void ctm_control_apply(struct wlr_ctm_control_v1 *control) {
+	fprintf(stderr, "setting\n");
 	wlr_output_set_ctm(control->output, control->ctm);
 
 	if (!wlr_output_test(control->output)) {
@@ -50,6 +51,7 @@ static void ctm_control_apply(struct wlr_ctm_control_v1 *control) {
 		return;
 	}
 
+	fprintf(stderr, "scheduling\n");
 	wlr_output_schedule_frame(control->output);
 }
 

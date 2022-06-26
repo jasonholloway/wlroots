@@ -36,7 +36,8 @@ static const uint32_t SUPPORTED_OUTPUT_STATE =
 	WLR_OUTPUT_STATE_BUFFER |
 	WLR_OUTPUT_STATE_MODE |
 	WLR_OUTPUT_STATE_ENABLED |
-	WLR_OUTPUT_STATE_GAMMA_LUT;
+	WLR_OUTPUT_STATE_GAMMA_LUT |
+	WLR_OUTPUT_STATE_CTM;
 
 bool check_drm_features(struct wlr_drm_backend *drm) {
 	if (drmGetCap(drm->fd, DRM_CAP_CURSOR_WIDTH, &drm->cursor_width)) {

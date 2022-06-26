@@ -718,8 +718,6 @@ int main(int argc, char *argv[]) {
 	wlr_log_init(WLR_DEBUG, NULL);
 	char *startup_cmd = NULL;
 
-	fprintf(stderr, "startin!");
-
 	int c;
 	while ((c = getopt(argc, argv, "s:h")) != -1) {
 		switch (c) {
